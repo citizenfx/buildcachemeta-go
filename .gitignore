@@ -16,3 +16,4 @@
 
 *.cmd
 .vscode/
+dist/
