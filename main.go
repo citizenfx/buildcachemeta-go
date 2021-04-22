@@ -76,14 +76,14 @@ func run() error {
 	minioClient, err := minio.New(*bucketEndpoint, minioOptions)
 
 	if err != nil {
-		log.Fatalf("%v", err)
+		return err
 	}
 
 	files := make(chan *ContentFile, 8192)
 
 	cwalk.NumWorkers = 64
 
-	go func() {
+	err = go func() {
 		err := cwalk.Walk(*sourcePath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -228,8 +228,7 @@ func run() error {
 		close(files)
 
 		if err != nil {
-			fmt.Print(err)
-			return
+			panic(err)
 		}
 	}()
 
@@ -276,7 +275,7 @@ func run() error {
 	}
 
 	{
-		_, err = minioClient.PutObject(cxt, *bucketName, fmt.Sprintf("tags/%v/%v/%v", *cacheName, *branchName, *branchVersion), bytes.NewReader([]byte("OK")), -1, minio.PutObjectOptions{
+		_, err = minioClient.PutObject(cxt, *bucketName, fmt.Sprintf("tags/%v/%v/%v", *cacheName, *branchName, *branchVersion), bytes.NewReader([]byte(*branchVersion)), -1, minio.PutObjectOptions{
 			UserMetadata: map[string]string{
 				"branch-version":    *branchVersion,
 				"branch-manifest":   manifestHash,
@@ -292,7 +291,7 @@ func run() error {
 	}
 
 	{
-		_, err = minioClient.PutObject(cxt, *bucketName, fmt.Sprintf("heads/%v/%v", *cacheName, *branchName), bytes.NewReader([]byte("OK")), -1, minio.PutObjectOptions{
+		_, err = minioClient.PutObject(cxt, *bucketName, fmt.Sprintf("heads/%v/%v", *cacheName, *branchName), bytes.NewReader([]byte(*branchVersion)), -1, minio.PutObjectOptions{
 			UserMetadata: map[string]string{
 				"branch-version":    *branchVersion,
 				"branch-manifest":   manifestHash,
