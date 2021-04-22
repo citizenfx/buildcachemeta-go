@@ -9,7 +9,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -83,7 +82,7 @@ func run() error {
 
 	cwalk.NumWorkers = 64
 
-	err = go func() {
+	go func() {
 		err := cwalk.Walk(*sourcePath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
